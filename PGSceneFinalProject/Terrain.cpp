@@ -4,151 +4,151 @@
 
 namespace gps {
 
-	Terrain::Terrain(void) {
+  Terrain::Terrain(void) {
 
-	}
+  }
 
-	Terrain::Terrain(int verticesCount) {
-		this->verticesCount = verticesCount;
-		this->wasGenerated = false;
-		this->terrainMesh = this->generateTerrain();
-	}
+  Terrain::Terrain(int verticesCount) {
+    this->verticesCount = verticesCount;
+    this->wasGenerated = false;
+    this->terrainMesh = this->generateTerrain();
+  }
 
-	void Terrain::Draw(gps::Shader shader) {
-		if (!this->wasGenerated) {
-			fprintf(stderr, "Terrain can not be drawn because it was not generated.");
-			return;
-		}
+  void Terrain::Draw(gps::Shader shader) {
+    if (!this->wasGenerated) {
+      fprintf(stderr, "Terrain can not be drawn because it was not generated.");
+      return;
+    }
 
-		this->terrainMesh.Draw(shader);
-	}
+    this->terrainMesh.Draw(shader);
+  }
 
-	Mesh Terrain::generateTerrain() {
-		std::vector<gps::Vertex> vertices;
-		std::vector<GLuint> indices;
-		std::vector<gps::Texture> textures;
+  Mesh Terrain::generateTerrain() {
+    std::vector<gps::Vertex> vertices;
+    std::vector<GLuint> indices;
+    std::vector<gps::Texture> textures;
 
-		float vx, vy, vz;
+    float vx, vy, vz;
 
-		std::default_random_engine generator;
-		std::uniform_real_distribution<float> distribution(-.5, +.5);
-		auto rng = std::bind(distribution, generator);
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(-.5, +.5);
+    auto rng = std::bind(distribution, generator);
 
-		for (int i = 0; i < this->verticesCount; i++) {
-			for (int j = 0; j < this->verticesCount; j++) {
-				vx = 2 * (float)j / (float)(this->verticesCount - 1) - 1; // cover the whole plane: [0, 1] to [-1, 1]
-				vy = (getHeightAtCoord(j, i, 0) + 1.0f) * .5; // [-1, 1] to [0, 1]
-				vz = 2 * (float)i / (float)(this->verticesCount - 1) - 1;
+    for (int i = 0; i < this->verticesCount; i++) {
+      for (int j = 0; j < this->verticesCount; j++) {
+        vx = 2 * (float)j / (float)(this->verticesCount - 1) - 1; // cover the whole plane: [0, 1] to [-1, 1]
+        vy = (getHeightAtCoord(j, i, 0) + 1.0f) * .5; // [-1, 1] to [0, 1]
+        vz = 2 * (float)i / (float)(this->verticesCount - 1) - 1;
 
-				glm::vec3 vertexPosition(vx, vy, vz);
-				glm::vec3 vertexNormal = glm::vec3(0.0f, 0.0f, 0.0f); // default normal, will be overriden
-				glm::vec2 vertexTexCoords(0, 0);
+        glm::vec3 vertexPosition(vx, vy, vz);
+        glm::vec3 vertexNormal = glm::vec3(0.0f, 0.0f, 0.0f); // default normal, will be overriden
+        glm::vec2 vertexTexCoords(0, 0);
 
-				gps::Vertex currentVertex;
-				currentVertex.Position = vertexPosition;
-				currentVertex.Normal = vertexNormal;
-				currentVertex.TexCoords = vertexTexCoords;
+        gps::Vertex currentVertex;
+        currentVertex.Position = vertexPosition;
+        currentVertex.Normal = vertexNormal;
+        currentVertex.TexCoords = vertexTexCoords;
 
-				vertices.push_back(currentVertex);
-			}
-		}
-		
-		// Compute normals for each point using its 4 neighbours
-		/* 
-			OBSOLOTE, useless, redundant, unsatisfactory, unpleasing, faulty, buggy
+        vertices.push_back(currentVertex);
+      }
+    }
 
-			for (int i = 1; i < this->verticesCount - 1; i++) {
-				for (int j = 1; j < this->verticesCount - 1; j++) {
-					int index = i * this->verticesCount + j;
+    // Compute normals for each point using its 4 neighbours
+    /*
+      OBSOLOTE, useless, redundant, unsatisfactory, unpleasing, faulty, buggy
 
-					// Get east, west, south and north neighbours
-					float left  = vertices.at(index - 1).Position.z;
-					float right = vertices.at(index + 1).Position.z;
-					float up		= vertices.at((i + 1) * this->verticesCount + j).Position.z;
-					float down  = vertices.at((i - 1) * this->verticesCount + j).Position.z;
+      for (int i = 1; i < this->verticesCount - 1; i++) {
+        for (int j = 1; j < this->verticesCount - 1; j++) {
+          int index = i * this->verticesCount + j;
 
-					float nx = (left + right) / 2.0f;
-					float nz = (up + down) / 2.0f;
+          // Get east, west, south and north neighbours
+          float left  = vertices.at(index - 1).Position.z;
+          float right = vertices.at(index + 1).Position.z;
+          float up		= vertices.at((i + 1) * this->verticesCount + j).Position.z;
+          float down  = vertices.at((i - 1) * this->verticesCount + j).Position.z;
 
-					vertices.at(index).Normal = glm::vec3(nx, 1.0f, nz);
-				}
-			}
-		*/
+          float nx = (left + right) / 2.0f;
+          float nz = (up + down) / 2.0f;
 
-		// The normal of each vertex position is equal to
-		// normalize(sum(normal of triangle(i) adjiacent to our vertex))
-		
+          vertices.at(index).Normal = glm::vec3(nx, 1.0f, nz);
+        }
+      }
+    */
 
-		GLuint innerTrianglePairsCount = this->verticesCount - 1;
-		for (int i = 0; i < innerTrianglePairsCount; i++) {
-			for (int j = 0; j < innerTrianglePairsCount; j++) {
+    // The normal of each vertex position is equal to
+    // normalize(sum(normal of triangle(i) adjiacent to our vertex))
 
-				// Get the 4 points indices enclosing our pair of triangles
-				GLuint bottomLt = i * this->verticesCount + j;
-				GLuint bottomRt = bottomLt + 1;
-				GLuint topLt = (i + 1) * this->verticesCount + j;
-				GLuint topRt = topLt + 1;
 
-				// Get each of 4 vertices
-				glm::vec3 vecBottomLt = vertices.at(bottomLt).Position;
-				glm::vec3 vecBottomRt = vertices.at(bottomRt).Position;
-				glm::vec3 vecTopLt = vertices.at(topLt).Position;
-				glm::vec3 vecTopRt = vertices.at(topRt).Position;
+    GLuint innerTrianglePairsCount = this->verticesCount - 1;
+    for (int i = 0; i < innerTrianglePairsCount; i++) {
+      for (int j = 0; j < innerTrianglePairsCount; j++) {
 
-				// first triangle
-				glm::vec3 ab = vecBottomLt - vecTopLt;
-				glm::vec3 ac = vecBottomRt - vecTopLt;
-				glm::vec3 normal = glm::normalize(glm::cross(ab, ac));
+        // Get the 4 points indices enclosing our pair of triangles
+        GLuint bottomLt = i * this->verticesCount + j;
+        GLuint bottomRt = bottomLt + 1;
+        GLuint topLt = (i + 1) * this->verticesCount + j;
+        GLuint topRt = topLt + 1;
 
-				indices.push_back(topLt);
-				indices.push_back(bottomLt);
-				indices.push_back(bottomRt);
+        // Get each of 4 vertices
+        glm::vec3 vecBottomLt = vertices.at(bottomLt).Position;
+        glm::vec3 vecBottomRt = vertices.at(bottomRt).Position;
+        glm::vec3 vecTopLt = vertices.at(topLt).Position;
+        glm::vec3 vecTopRt = vertices.at(topRt).Position;
 
-				vertices.at(topLt).Normal += normal;
-				vertices.at(bottomLt).Normal += normal;
-				vertices.at(bottomRt).Normal += normal;
+        // first triangle
+        glm::vec3 ab = vecBottomLt - vecTopLt;
+        glm::vec3 ac = vecBottomRt - vecTopLt;
+        glm::vec3 normal = glm::normalize(glm::cross(ab, ac));
 
-				// second triangle
-				ab = vecBottomRt - vecTopLt;
-				ac = vecTopRt		 - vecTopLt;
-				normal = glm::normalize(glm::cross(ab, ac));
+        indices.push_back(topLt);
+        indices.push_back(bottomLt);
+        indices.push_back(bottomRt);
 
-				indices.push_back(topLt);
-				indices.push_back(bottomRt);
-				indices.push_back(topRt);
+        vertices.at(topLt).Normal += normal;
+        vertices.at(bottomLt).Normal += normal;
+        vertices.at(bottomRt).Normal += normal;
 
-				vertices.at(topLt).Normal += normal;
-				vertices.at(bottomLt).Normal += normal;
-				vertices.at(bottomRt).Normal += normal;
-			}
-		}
+        // second triangle
+        ab = vecBottomRt - vecTopLt;
+        ac = vecTopRt - vecTopLt;
+        normal = glm::normalize(glm::cross(ab, ac));
 
-		// Normalize vertices normals
-		for (int i = 0; i < vertices.size(); i++) {
-			vertices.at(i).Normal = glm::normalize(vertices.at(i).Normal);
-		}
+        indices.push_back(topLt);
+        indices.push_back(bottomRt);
+        indices.push_back(topRt);
 
-		this->wasGenerated = true;
-		return Mesh(vertices, indices, textures);
-	}
+        vertices.at(topLt).Normal += normal;
+        vertices.at(bottomLt).Normal += normal;
+        vertices.at(bottomRt).Normal += normal;
+      }
+    }
 
-	float Terrain::getHeightAtCoord(int x, int y, int z) {
-		float xf = (float)x;
-		float yf = (float)y;
-		float zf = (float)z;
-		float maxed = (float)(1 << (octaves - 1));
-		float result = 0.0f;
+    // Normalize vertices normals
+    for (int i = 0; i < vertices.size(); i++) {
+      vertices.at(i).Normal = glm::normalize(vertices.at(i).Normal);
+    }
 
-		float amplitude = 1;
-		float frequency = .5;
+    this->wasGenerated = true;
+    return Mesh(vertices, indices, textures);
+  }
 
-		// wave generation by combination noises at different frequencies and amplitudes
-		for (int i = 0; i < octaves; i++) {
-			result += perlinNoise.getNoise(glm::vec3(xf, yf, zf) * frequency) * amplitude;
-			amplitude *= .5;
-			frequency *= 2;
-		}
+  float Terrain::getHeightAtCoord(int x, int y, int z) {
+    float xf = (float)x;
+    float yf = (float)y;
+    float zf = (float)z;
+    float maxed = (float)(1 << (octaves - 1));
+    float result = 0.0f;
 
-		return result;
-	}
+    float amplitude = 1;
+    float frequency = .5;
+
+    // wave generation by combination noises at different frequencies and amplitudes
+    for (int i = 0; i < octaves; i++) {
+      result += perlinNoise.getNoise(glm::vec3(xf, yf, zf) * frequency) * amplitude;
+      amplitude *= .5;
+      frequency *= 2;
+    }
+
+    return result;
+  }
 }
