@@ -1,6 +1,7 @@
 
 #include "Terrain.hpp"
 #include "Helpers.hpp"
+#include "Noise.hpp"
 
 namespace gps {
 
@@ -30,18 +31,21 @@ namespace gps {
 
     float vx, vy, vz;
 
+		Noise noiseGenerator;
+
     std::default_random_engine generator;
     std::uniform_real_distribution<float> distribution(-.5, +.5);
     auto rng = std::bind(distribution, generator);
 
     for (int i = 0; i < this->verticesCount; i++) {
       for (int j = 0; j < this->verticesCount; j++) {
-        vx = 2 * (float)j / (float)(this->verticesCount - 1) - 1; // cover the whole plane: [0, 1] to [-1, 1]
-        vy = (getHeightAtCoord(j, i, 0) + 1.0f) * .5; // [-1, 1] to [0, 1]
-        vz = 2 * (float)i / (float)(this->verticesCount - 1) - 1;
+        vx = 2 * (float)j / (float)(this->verticesCount - 1) - 1.f; // cover the whole plane: [0, 1] to [-1, 1]
+        vz = 2 * (float)i / (float)(this->verticesCount - 1) - 1.f;
+				vy = noiseGenerator.getHeightAt(j, i) * .5; //(getHeightAtCoord(j, i) + 1.0f) * .5; // [-1, 1] to [0, 1]
 
+				//printf("Height at (%2d %2d) %5f\n", j, i, vz);
         glm::vec3 vertexPosition(vx, vy, vz);
-        glm::vec3 vertexNormal = glm::vec3(0.0f, 0.0f, 0.0f); // default normal, will be overriden
+        glm::vec3 vertexNormal = glm::vec3(0.0f, 1.0f, 0.0f); // default normal, will be overriden
         glm::vec2 vertexTexCoords(0, 0);
 
         gps::Vertex currentVertex;
@@ -132,19 +136,18 @@ namespace gps {
     return Mesh(vertices, indices, textures);
   }
 
-  float Terrain::getHeightAtCoord(int x, int y, int z) {
+  float Terrain::getHeightAtCoord(int x, int y) {
     float xf = (float)x;
     float yf = (float)y;
-    float zf = (float)z;
     float maxed = (float)(1 << (octaves - 1));
     float result = 0.0f;
 
-    float amplitude = 1;
+		float amplitude = 1;
     float frequency = .5;
 
     // wave generation by combination noises at different frequencies and amplitudes
     for (int i = 0; i < octaves; i++) {
-      result += perlinNoise.getNoise(glm::vec3(xf, yf, zf) * frequency) * amplitude;
+      result += perlinNoise.getNoise(glm::vec2(xf, yf) * frequency) * amplitude;
       amplitude *= .5;
       frequency *= 2;
     }

@@ -125,6 +125,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>GLEW;GLFW;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>50331648</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +151,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="Helpers.hpp" />
+    <ClInclude Include="Noise.hpp" />
     <ClInclude Include="PerlinNoise.hpp" />
     <ClInclude Include="Terrain.hpp" />
     <ClInclude Include="Mesh.hpp" />
@@ -158,6 +160,7 @@
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="TerrainCollision.hpp" />
     <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +169,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model3D.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Noise.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb_image.c" />
@@ -176,6 +180,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="TerrainCollision.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shaderStart.frag" />

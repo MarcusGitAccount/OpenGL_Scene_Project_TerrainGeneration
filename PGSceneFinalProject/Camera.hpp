@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
+#include "TerrainCollision.hpp"
+#include "Model3D.hpp"
 
 namespace gps {
 
@@ -25,13 +27,21 @@ namespace gps {
 		void move(MOVE_DIRECTION direction, float speed);
 		void rotate(float pitch, float yaw);
 		glm::vec3 getCameraDirection();
+		glm::vec3 getCameraPosition();
+		void setTerrainCollision(TerrainCollision terrainCollision);
+		void setCameraDirection(glm::vec3 cameraDirection);
+		void setCameraPosition(glm::vec3 cameraPosition);
+		void setModels(std::vector<Model3D*> models);
 
 	private:
+		TerrainCollision terrainCollision;
 		glm::vec3 cameraPosition;
 		glm::vec3 cameraTarget;
 		glm::vec3 cameraDirection;
 		glm::vec3 cameraRightDirection;
 		glm::vec3 up;
+		std::vector<Model3D*> models;
+
 	};
 
 }

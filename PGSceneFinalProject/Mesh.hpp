@@ -58,7 +58,7 @@ private:
     GLuint VAO, VBO, EBO;
 
 	// Initializes all the buffer objects/arrays
-	void setupMesh();
+		void setupMesh();
 
 };
 

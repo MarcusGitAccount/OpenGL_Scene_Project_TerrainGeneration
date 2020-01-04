@@ -25,9 +25,9 @@ namespace gps {
 		int verticesCount;
 		bool wasGenerated;
 
-		float getHeightAtCoord(int x, int y, int z);
+		float getHeightAtCoord(int x, int y);
 
 		// Number of layers for noise wave generation
-		static const int octaves = 5;
+		static const int octaves = 2;
 	};
 }

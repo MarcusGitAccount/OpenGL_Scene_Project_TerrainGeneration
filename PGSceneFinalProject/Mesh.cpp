@@ -23,8 +23,7 @@ namespace gps {
 	}
 
 	/* Mesh drawing function - also applies associated textures */
-	void Mesh::Draw(gps::Shader shader)
-	{
+	void Mesh::Draw(gps::Shader shader) {
 		shader.useShaderProgram();
 
 		//set textures
@@ -45,7 +44,7 @@ namespace gps {
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
-    }
+   }
 
 	// Initializes all the buffer objects/arrays
 	void Mesh::setupMesh(){

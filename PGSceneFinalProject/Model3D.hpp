@@ -19,6 +19,19 @@
 #include "stb_image.h"
 
 namespace gps {
+	
+		struct Boundary {
+			float lo, hi;
+
+			Boundary() {
+				this->lo =  1e10f;
+				this->hi = -1e10f;
+			}
+		};
+
+		struct BoundingBox {
+			Boundary xBound, yBound, zBound;
+		};
 
     class Model3D
     {
@@ -32,9 +45,12 @@ namespace gps {
 
 		void Draw(gps::Shader shaderProgram);
 
-    private:
 		// Component meshes - group of objects
-        std::vector<gps::Mesh> meshes;
+		std::vector<gps::Mesh> meshes;
+
+		bool checkIfPointInside(glm::vec3 point);
+
+    private:
 		// Associated textures
         std::vector<gps::Texture> loadedTextures;
 
@@ -46,7 +62,14 @@ namespace gps {
 
 		// Reads the pixel data from an image file and loads it into the video memory
 		GLuint ReadTextureFromFile(const char* file_name);
+
+		void computeBounds();
+
+		BoundingBox boundaries;
+
+		std::string name;
     };
+
 }
 
 #endif /* Model3D_hpp */

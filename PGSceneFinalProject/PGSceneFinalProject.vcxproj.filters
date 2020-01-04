@@ -31,6 +31,12 @@
     <ClCompile Include="Helpers.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="Noise.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainCollision.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp">
@@ -64,6 +70,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Helpers.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Noise.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainCollision.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

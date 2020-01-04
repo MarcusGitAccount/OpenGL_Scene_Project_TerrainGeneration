@@ -1,5 +1,5 @@
-
 #define GLEW_STATIC
+#define TINYOBJLOADER_IMPLEMENTATION
 
 #include <iostream>
 #include <string>
@@ -14,15 +14,14 @@
 #include "Helpers.hpp"
 #include "Shader.hpp"
 #include "Camera.hpp"
-
-#define TINYOBJLOADER_IMPLEMENTATION
+#include "TerrainCollision.hpp"
 
 #include "Model3D.hpp"
 #include "Mesh.hpp"
 #include "Terrain.hpp"
 
-int glWindowWidth = 640;
-int glWindowHeight = 480;
+int glWindowWidth = 1280;
+int glWindowHeight = 780;
 int retina_width, retina_height;
 GLFWwindow *glWindow = NULL;
 
@@ -40,18 +39,24 @@ GLuint lightDirLoc;
 glm::vec3 lightColor;
 GLuint lightColorLoc;
 
-glm::vec3 cameraPosition(0.021123, 2.423086, 1.073493);
-glm::vec3 cameraDir(0.013677, -0.852640, -0.522320);
+glm::vec3 cameraPosition(-0.815332f, 1.712594f, 6.586054f);
+glm::vec3 cameraDir(0.008652f, -0.130526f, -0.991407f);
 glm::vec3 cameraTarget = cameraDir + cameraPosition;
-gps::Camera myCamera(cameraPosition, cameraTarget);
-float cameraSpeed = 0.001f;
+gps::Camera camera(cameraPosition, cameraTarget);
+float cameraSpeed = 1e-2f;
 
 bool pressedKeys[1024];
 float angle = 0.0f;
 
-gps::Model3D myModel;
-gps::Shader myCustomShader, terrainShader;
+gps::Model3D* terrainModel;
+gps::Model3D* condor;
+gps::Model3D* cottage;
+std::vector<gps::Model3D*> watchtowers;
+std::vector<gps::Model3D*> allModels;
+
+gps::Shader mainProgramShader;
 gps::Terrain terrain;
+gps::TerrainCollision terrainCollision;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -88,6 +93,16 @@ GLenum glCheckError_(const char *file, int line)
   return errorCode;
 }
 
+int time = 0;
+int dayPeriodLength = 4095;
+bool isDay = true;
+
+float projectionAngle = 45.f;
+
+bool inPresentationMode = false;
+
+float ang = 0.0f;
+
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 void windowResizeCallback(GLFWwindow *window, int width, int height)
@@ -100,7 +115,7 @@ void windowResizeCallback(GLFWwindow *window, int width, int height)
   //set projection matrix
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
   //send matrix data to shader
-  GLint projLoc = glGetUniformLocation(myCustomShader.shaderProgram, "projection");
+  GLint projLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "projection");
   glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
   //set Viewport transform
@@ -137,25 +152,55 @@ void processMovement()
       angle += 360.0f;
   }
 
-  if (pressedKeys[GLFW_KEY_W])
+  if (pressedKeys[GLFW_KEY_W] && !inPresentationMode)
   {
-    myCamera.move(gps::MOVE_FORWARD, cameraSpeed);
+    camera.move(gps::MOVE_FORWARD, cameraSpeed);
   }
 
-  if (pressedKeys[GLFW_KEY_S])
+  if (pressedKeys[GLFW_KEY_S] && !inPresentationMode)
   {
-    myCamera.move(gps::MOVE_BACKWARD, cameraSpeed);
+    camera.move(gps::MOVE_BACKWARD, cameraSpeed);
   }
 
-  if (pressedKeys[GLFW_KEY_A])
+  if (pressedKeys[GLFW_KEY_A] && !inPresentationMode)
   {
-    myCamera.move(gps::MOVE_LEFT, cameraSpeed);
+    camera.move(gps::MOVE_LEFT, cameraSpeed);
   }
 
-  if (pressedKeys[GLFW_KEY_D])
+  if (pressedKeys[GLFW_KEY_D] && !inPresentationMode)
   {
-    myCamera.move(gps::MOVE_RIGHT, cameraSpeed);
+    camera.move(gps::MOVE_RIGHT, cameraSpeed);
   }
+
+	if (pressedKeys[GLFW_KEY_EQUAL]) {
+		// zoom in
+		projectionAngle = (float)gps::coerce(projectionAngle - 1e-2, 5.f, 45.f);
+		projection = glm::perspective(glm::radians(projectionAngle), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	}
+
+	if (pressedKeys[GLFW_KEY_MINUS]) {
+		// zoom out
+		projectionAngle = (float)gps::coerce(projectionAngle + 1e-2, 5.f, 45.f);
+		projection = glm::perspective(glm::radians(projectionAngle), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+	}
+
+	if (pressedKeys[GLFW_KEY_P]) {
+		inPresentationMode = false;
+	}
+
+	if (pressedKeys[GLFW_KEY_1]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
+	if (pressedKeys[GLFW_KEY_2]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	if (pressedKeys[GLFW_KEY_3]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	}
 }
 
 void mouseCallback(GLFWwindow *window, double xpos, double ypos)
@@ -165,8 +210,11 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
   static const float cameraRotationSensitivity = 5e-1;
   static double yaw = 0, pitch = 0;
 
-  if (firstMouseCallback)
-  {
+	if (inPresentationMode) {
+		return;
+	}
+
+  if (firstMouseCallback) {
     firstMouseCallback = false;
     xlast = xpos;
     ylast = ypos;
@@ -183,7 +231,7 @@ void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 
   //yaw		= coerce(yaw,		-89.0f, 89.0f);
   pitch = gps::coerce(pitch, -89.0f, 89.0f);
-  myCamera.rotate(-pitch, yaw);
+  camera.rotate(-pitch, yaw);
 }
 
 bool initOpenGLWindow()
@@ -244,82 +292,104 @@ void initOpenGLState()
   glEnable(GL_CULL_FACE);  // cull face
   glCullFace(GL_BACK);     // cull back face
   glFrontFace(GL_CCW);     // GL_CCW for counter clock-wise
-
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void initModels()
 {
-  //myModel = gps::Model3D("objects/nanosuit/nanosuit.obj", "objects/nanosuit/");
-  terrain = gps::Terrain(64);
+  terrainModel = new gps::Model3D("objects/land/landscape.obj", "objects/land/");
+	terrainCollision = gps::TerrainCollision(terrainModel->meshes.front()); // terrain has only one mesh
+	camera.setTerrainCollision(terrainCollision);
+
+	watchtowers.push_back(new gps::Model3D("objects/watchtower1/watchtower.obj", "objects/watchtower1/"));
+	watchtowers.push_back(new gps::Model3D("objects/watchtower2/watchtower.obj", "objects/watchtower2/"));
+	watchtowers.push_back(new gps::Model3D("objects/watchtower3/watchtower.obj", "objects/watchtower3/"));
+
+	condor = new gps::Model3D("objects/condor/Condor/CONDOR.OBJ", "objects/condor/Condor/");
+	cottage = new gps::Model3D("objects/cottage/cottage_obj.obj", "objects/cottage/");
+
+	allModels.insert(std::end(allModels), std::begin(watchtowers), std::end(watchtowers));
+	allModels.push_back(condor);
+	allModels.push_back(cottage);
+
+	camera.setModels(allModels);
 }
 
 void initShaders()
 {
-  terrainShader.loadShader("shaders/terrainShader.vert", "shaders/terrainShader.frag");
-  terrainShader.useShaderProgram();
-
-  myCustomShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
-  //myCustomShader.useShaderProgram();
+  mainProgramShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
+  mainProgramShader.useShaderProgram();
 }
 
 void initUniforms()
 {
   model = glm::mat4(1.0f);
-  modelLoc = glGetUniformLocation(terrainShader.shaderProgram, "model");
+  modelLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "model");
   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-  view = myCamera.getViewMatrix();
-  viewLoc = glGetUniformLocation(terrainShader.shaderProgram, "view");
+  view = camera.getViewMatrix();
+  viewLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "view");
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
   normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
-  normalMatrixLoc = glGetUniformLocation(terrainShader.shaderProgram, "normalMatrix");
+  normalMatrixLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "normalMatrix");
   glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-  projection = glm::perspective(glm::radians(45.0f), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
-  projectionLoc = glGetUniformLocation(terrainShader.shaderProgram, "projection");
+  projection = glm::perspective(glm::radians(projectionAngle), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
+  projectionLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "projection");
   glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
   //set the light direction (direction towards the light)
   lightDir = glm::vec3(0.0f, 1.0f, 1.0f);
-  lightDirLoc = glGetUniformLocation(terrainShader.shaderProgram, "lightDir");
+  lightDirLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "lightDir");
   glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
   //set light color
   lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //white light
-  lightColorLoc = glGetUniformLocation(terrainShader.shaderProgram, "lightColor");
+  lightColorLoc = glGetUniformLocation(mainProgramShader.shaderProgram, "lightColor");
   glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
 }
 
-void renderScene()
-{
+void renderScene() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   processMovement();
 
-  //myCustomShader.useShaderProgram();
+	if (inPresentationMode) {
+		glm::mat4 tr(1.0f);
+		tr = glm::rotate(model, glm::radians(ang), glm::vec3(0, 1, 0));
 
-  view = myCamera.getViewMatrix();
-  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glm::vec3 newPosition = glm::vec3(tr * glm::vec4(camera.getCameraPosition(), 1.f));
+		glm::vec3 newDirection = glm::vec3(tr * glm::vec4(camera.getCameraDirection(), 1.f));
 
-  model = glm::mat4(1.0f);
-  model = glm::rotate(model, glm::radians(angle), glm::vec3(0, 1, 0));
-  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		camera.setCameraPosition(newPosition);
+		camera.setCameraDirection(newDirection);
+		ang += 1e-4f;
+
+		if (ang > .275f) {
+			inPresentationMode = false;
+		}
+	}
+
+	view = camera.getViewMatrix();
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+	model = glm::mat4(1.f);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
   normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
   glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-  //myModel.Draw(myCustomShader);
+	terrainModel->Draw(mainProgramShader);
+	condor->Draw(mainProgramShader);
+	cottage->Draw(mainProgramShader);
 
-  //terrainShader.useShaderProgram();
-  terrain.Draw(terrainShader);
+	for (auto& const watchtower : watchtowers) {
+		watchtower->Draw(mainProgramShader);
+	}
 }
 
-int main(int argc, const char *argv[])
-{
-
+int main(int argc, const char *argv[]) {
   initOpenGLWindow();
   initOpenGLState();
   initModels();

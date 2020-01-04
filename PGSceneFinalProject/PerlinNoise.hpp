@@ -12,13 +12,13 @@ namespace gps {
 			PerlinNoise();
 
 			// Get noise value in the XZ openGl plane
-			float getNoise(glm::vec3 point);
+			float getNoise(glm::vec2 point);
 
 			inline float interpolate(float a, float b, float t);
 
 			inline float smoothCosine(float t);
 
-			inline unsigned getPermutationSample(int x, int y, int z);
+			inline unsigned getPermutationSample(int x, int y);
 
 	private:
 		// Power of 2 for efficient modulo operations
@@ -27,7 +27,7 @@ namespace gps {
 		static const int mod = randomSeedsCount - 1;
 
 		// Look up table for corner vectors
-		glm::vec3 randomSeedsLut[randomSeedsCount];
+		glm::vec2 randomSeedsLut[randomSeedsCount];
 
 		// Permutations table for seeking appropiate corner vectors. Must be double to allow for
 		// lookup on both dimensions

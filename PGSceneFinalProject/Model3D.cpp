@@ -32,9 +32,23 @@ void Model3D::Draw(gps::Shader shaderProgram)
     meshes[i].Draw(shaderProgram);
 }
 
+bool Model3D::checkIfPointInside(glm::vec3 point) {
+	if (point.x < boundaries.xBound.lo || point.x > boundaries.xBound.hi) {
+		return false;
+	}
+	if (point.y < boundaries.yBound.lo || point.y > boundaries.yBound.hi) {
+		return false;
+	}
+	if (point.z < boundaries.zBound.lo || point.z > boundaries.zBound.hi) {
+		return false;
+	}
+	return true;
+}
+
 // Does the parsing of the .obj file and fills in the data structure
 void Model3D::ReadOBJ(std::string fileName, std::string basePath)
 {
+	this->name = fileName;
 
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
@@ -54,6 +68,7 @@ void Model3D::ReadOBJ(std::string fileName, std::string basePath)
     exit(1);
   }
 
+	std::cout << "Will load object " << fileName << std::endl;
   std::cout << "# of shapes    : " << shapes.size() << std::endl;
   std::cout << "# of materials : " << materials.size() << std::endl;
 
@@ -154,6 +169,8 @@ void Model3D::ReadOBJ(std::string fileName, std::string basePath)
 
     meshes.push_back(gps::Mesh(vertices, indices, textures));
   }
+
+	computeBounds();
 }
 
 // Retrieves a texture associated with the object - by its name and type
@@ -240,4 +257,21 @@ GLuint Model3D::ReadTextureFromFile(const char *file_name)
 
   return textureID;
 }
+
+void Model3D::computeBounds() {
+	for (auto const& mesh : meshes) {
+		for (auto const& vertex : mesh.vertices) {
+			glm::vec3 pos = vertex.Position;
+
+			boundaries.xBound.lo = std::fminf(boundaries.xBound.lo, pos.x);
+			boundaries.yBound.lo = std::fminf(boundaries.yBound.lo, pos.y);
+			boundaries.zBound.lo = std::fminf(boundaries.zBound.lo, pos.z);
+
+			boundaries.xBound.hi = std::fmaxf(boundaries.xBound.hi, pos.x);
+			boundaries.yBound.hi = std::fmaxf(boundaries.yBound.hi, pos.y);
+			boundaries.zBound.hi = std::fmaxf(boundaries.zBound.hi, pos.z);
+		}
+	}
+}
+
 } // namespace gps
