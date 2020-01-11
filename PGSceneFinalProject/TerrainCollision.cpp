@@ -44,7 +44,6 @@ namespace gps {
 			return 0.f;
 		}
 
-
 		glm::vec3 a, b, c;
 
 		a = points[zCoord][xCoord];
@@ -58,7 +57,6 @@ namespace gps {
 			c = points[zCoord + 1][xCoord + 1];
 		}
 
-		//printf("(%d, %d)\n", xCoord, zCoord);
 		glm::vec3 normal = glm::cross(c - a, b - a);
 		float sign = glm::dot(normal, c - position);
 
@@ -66,7 +64,6 @@ namespace gps {
 		std::cout << "Above? " << (sign > 0 ? "yes" : "no") << std::endl;
 
 		return sign > 0; // vectors facing opposite directions
-		//return true;
 	}
 
 	glm::vec3 TerrainCollision::normalizeCoords(glm::vec3 position) {

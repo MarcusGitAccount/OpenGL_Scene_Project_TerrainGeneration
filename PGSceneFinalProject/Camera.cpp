@@ -17,6 +17,7 @@ namespace gps {
 		this->cameraDirection = glm::normalize(cameraTarget - cameraPosition);
 		this->up = glm::vec3(0.0f, 1.0f, 0.0f);
 		this->cameraRightDirection = glm::normalize(glm::cross(this->cameraDirection, this->up));
+		this->detectCollision = true;
 	}
 
 	glm::mat4 Camera::getViewMatrix() {
@@ -29,6 +30,10 @@ namespace gps {
 
 	glm::vec3 Camera::getCameraPosition() {
 		return this->cameraPosition;
+	}
+
+	glm::vec3 Camera::getCameaTarget() {
+		return this->cameraTarget;
 	}
 
 	void Camera::setTerrainCollision(TerrainCollision terrainCollision) {
@@ -44,11 +49,15 @@ namespace gps {
 		this->cameraPosition = cameraPosition;
 		this->cameraTarget = this->cameraDirection + cameraPosition;
 
-		printf("New camera position: %s\n", glm::to_string(this->cameraPosition).c_str());
+		//printf("New camera position: %s\n", glm::to_string(this->cameraPosition).c_str());
 	}
 
 	void Camera::setModels(std::vector<Model3D*> models) {
 		this->models = models;
+	}
+
+	void Camera::setDetectCollision() {
+		this->detectCollision = !this->detectCollision;
 	}
 
 	void Camera::move(MOVE_DIRECTION direction, float speed) {
@@ -72,9 +81,13 @@ namespace gps {
 			break;
 		}
 
-		bool isAbove = terrainCollision.isAbove(newPosition);
-		if (!isAbove) {
-			newPosition = cameraPosition;
+		if (this->detectCollision) {
+			bool isAbove = terrainCollision.isAbove(newPosition);
+
+			if (!isAbove) {
+				newPosition = cameraPosition;
+			}
+			std::cout << isAbove << std::endl;
 		}
 
 		for (auto const& model : models) {
@@ -84,7 +97,6 @@ namespace gps {
 		}
 
 		this->setCameraPosition(newPosition);
-		std::cout << isAbove << std::endl;
 		printf("Camera position: %5f %5f %5f\n", cameraPosition.x, cameraPosition.y, cameraPosition.z);
 	}
 

@@ -28,10 +28,12 @@ namespace gps {
 		void rotate(float pitch, float yaw);
 		glm::vec3 getCameraDirection();
 		glm::vec3 getCameraPosition();
+		glm::vec3 getCameaTarget();
 		void setTerrainCollision(TerrainCollision terrainCollision);
 		void setCameraDirection(glm::vec3 cameraDirection);
 		void setCameraPosition(glm::vec3 cameraPosition);
 		void setModels(std::vector<Model3D*> models);
+		void setDetectCollision();
 
 	private:
 		TerrainCollision terrainCollision;
@@ -41,6 +43,7 @@ namespace gps {
 		glm::vec3 cameraRightDirection;
 		glm::vec3 up;
 		std::vector<Model3D*> models;
+		bool detectCollision;
 
 	};
 

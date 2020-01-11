@@ -74,7 +74,6 @@ namespace gps {
 
 		float yLerp = interpolate(xLerp1, xLerp2, ty);
 
-
 		return yLerp;
 	}
 
@@ -85,7 +84,7 @@ namespace gps {
 	}
 
 	inline float PerlinNoise::smoothCosine(float t) {
-		return (1.0f - cos(t))* .5;
+		return (1.0f - cos(t)) * .5;
 		//return t * t * (3 - 2 * t);
 	}
 

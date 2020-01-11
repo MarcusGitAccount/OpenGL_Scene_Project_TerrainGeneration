@@ -20,17 +20,13 @@
 
 namespace gps {
 	
-		struct Boundary {
-			float lo, hi;
-
-			Boundary() {
-				this->lo =  1e10f;
-				this->hi = -1e10f;
-			}
-		};
-
 		struct BoundingBox {
-			Boundary xBound, yBound, zBound;
+			glm::vec4 lo, hi;
+
+			BoundingBox() {
+				this->lo = glm::vec4(1e10f);
+				this->hi = glm::vec4(-1e10f);
+			}
 		};
 
     class Model3D
@@ -50,6 +46,8 @@ namespace gps {
 
 		bool checkIfPointInside(glm::vec3 point);
 
+		BoundingBox boundaries;
+
     private:
 		// Associated textures
         std::vector<gps::Texture> loadedTextures;
@@ -65,7 +63,6 @@ namespace gps {
 
 		void computeBounds();
 
-		BoundingBox boundaries;
 
 		std::string name;
     };

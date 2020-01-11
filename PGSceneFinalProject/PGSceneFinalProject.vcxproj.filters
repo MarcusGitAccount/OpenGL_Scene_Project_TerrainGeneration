@@ -37,6 +37,9 @@
     <ClCompile Include="TerrainCollision.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp">
@@ -78,6 +81,9 @@
     <ClInclude Include="TerrainCollision.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Skybox.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -104,6 +110,15 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\terrainShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\skyboxShader.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\skyboxShader.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\simpleDepthMap.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

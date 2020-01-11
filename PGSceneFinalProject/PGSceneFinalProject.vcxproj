@@ -153,6 +153,7 @@
     <ClInclude Include="Helpers.hpp" />
     <ClInclude Include="Noise.hpp" />
     <ClInclude Include="PerlinNoise.hpp" />
+    <ClInclude Include="Skybox.hpp" />
     <ClInclude Include="Terrain.hpp" />
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="Model3D.hpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="Noise.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="stb_image.c" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -185,6 +187,9 @@
   <ItemGroup>
     <None Include="shaders\shaderStart.frag" />
     <None Include="shaders\shaderStart.vert" />
+    <None Include="shaders\simpleDepthMap.vert" />
+    <None Include="shaders\skyboxShader.frag" />
+    <None Include="shaders\skyboxShader.vert" />
     <None Include="shaders\terrainShader.frag" />
     <None Include="shaders\terrainShader.vert" />
   </ItemGroup>

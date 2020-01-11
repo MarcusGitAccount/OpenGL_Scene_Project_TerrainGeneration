@@ -33,13 +33,13 @@ void Model3D::Draw(gps::Shader shaderProgram)
 }
 
 bool Model3D::checkIfPointInside(glm::vec3 point) {
-	if (point.x < boundaries.xBound.lo || point.x > boundaries.xBound.hi) {
+	if (point.x < boundaries.lo.x|| point.x > boundaries.hi.x) {
 		return false;
 	}
-	if (point.y < boundaries.yBound.lo || point.y > boundaries.yBound.hi) {
+	if (point.y < boundaries.lo.y || point.y > boundaries.hi.y) {
 		return false;
 	}
-	if (point.z < boundaries.zBound.lo || point.z > boundaries.zBound.hi) {
+	if (point.z < boundaries.lo.z || point.z > boundaries.hi.z) {
 		return false;
 	}
 	return true;
@@ -263,13 +263,13 @@ void Model3D::computeBounds() {
 		for (auto const& vertex : mesh.vertices) {
 			glm::vec3 pos = vertex.Position;
 
-			boundaries.xBound.lo = std::fminf(boundaries.xBound.lo, pos.x);
-			boundaries.yBound.lo = std::fminf(boundaries.yBound.lo, pos.y);
-			boundaries.zBound.lo = std::fminf(boundaries.zBound.lo, pos.z);
+			boundaries.lo.x = std::fminf(boundaries.lo.x, pos.x);
+			boundaries.lo.y = std::fminf(boundaries.lo.y, pos.y);
+			boundaries.lo.z = std::fminf(boundaries.lo.z, pos.z);
 
-			boundaries.xBound.hi = std::fmaxf(boundaries.xBound.hi, pos.x);
-			boundaries.yBound.hi = std::fmaxf(boundaries.yBound.hi, pos.y);
-			boundaries.zBound.hi = std::fmaxf(boundaries.zBound.hi, pos.z);
+			boundaries.hi.x = std::fmaxf(boundaries.hi.x, pos.x);
+			boundaries.hi.y = std::fmaxf(boundaries.hi.y, pos.y);
+			boundaries.hi.z = std::fmaxf(boundaries.hi.z, pos.z);
 		}
 	}
 }
